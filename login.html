@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ULMS — Вход</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+ 
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+ 
+  :root {
+    --bg: #0e0e11;
+    --bg2: #16161a;
+    --bg3: #1e1e24;
+    --border: #2a2a35;
+    --text: #e8e8f0;
+    --text2: #9090a8;
+    --text3: #5a5a72;
+    --accent: #7c6dfa;
+    --accent2: #a594fb;
+    --red: #f87171;
+    --red-bg: rgba(248,113,113,0.08);
+    --green: #4ade80;
+    --green-bg: rgba(74,222,128,0.08);
+  }
+ 
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+ 
+  .container { width: 100%; max-width: 420px; padding: 1.5rem; }
+ 
+  .logo { text-align: center; margin-bottom: 2rem; }
+  .logo-title { font-size: 28px; font-weight: 600; letter-spacing: -0.02em; }
+  .logo-sub { font-size: 13px; color: var(--text3); margin-top: 4px; }
+ 
+  .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+ 
+  .tabs { display: flex; border-bottom: 1px solid var(--border); }
+  .tab { flex: 1; padding: 1rem; text-align: center; font-size: 14px; font-weight: 500; color: var(--text3); cursor: pointer; transition: all 0.15s; border: none; background: none; font-family: 'Inter', sans-serif; }
+  .tab.active { color: var(--accent2); border-bottom: 2px solid var(--accent); margin-bottom: -1px; }
+  .tab:hover:not(.active) { color: var(--text2); background: var(--bg3); }
+ 
+  .form-container { padding: 1.5rem; }
+ 
+  .form-group { margin-bottom: 1rem; }
+  .form-label { font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 6px; display: block; }
+  .form-input, .form-select {
+    width: 100%; background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 12px; font-size: 14px; color: var(--text);
+    font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.15s;
+  }
+  .form-input:focus, .form-select:focus { border-color: var(--accent); }
+  .form-select option { background: var(--bg3); }
+ 
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+ 
+  .divider { border: none; border-top: 1px solid var(--border); margin: 1rem 0; }
+  .divider-label { text-align: center; font-size: 11px; color: var(--text3); margin: -0.6rem 0 0.75rem; background: var(--bg2); display: inline-block; padding: 0 8px; position: relative; left: 50%; transform: translateX(-50%); }
+ 
+  .btn { width: 100%; padding: 11px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; border: none; font-family: 'Inter', sans-serif; transition: all 0.15s; margin-top: 0.5rem; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent2); }
+  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+ 
+  .alert { padding: 10px 12px; border-radius: 8px; font-size: 13px; margin-bottom: 1rem; display: none; }
+  .alert.error { background: var(--red-bg); color: var(--red); border: 1px solid rgba(248,113,113,0.2); display: block; }
+  .alert.success { background: var(--green-bg); color: var(--green); border: 1px solid rgba(74,222,128,0.2); display: block; }
+ 
+  .form-section { display: none; }
+  .form-section.active { display: block; }
+ 
+  .role-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 1rem; }
+  .role-option { padding: 10px; border-radius: 8px; border: 1px solid var(--border); cursor: pointer; text-align: center; transition: all 0.15s; }
+  .role-option:hover { border-color: var(--accent); }
+  .role-option.selected { border-color: var(--accent); background: rgba(124,109,250,0.08); }
+  .role-option input { display: none; }
+  .role-icon { font-size: 20px; margin-bottom: 4px; }
+  .role-name { font-size: 12px; font-weight: 500; color: var(--text2); }
+  .role-option.selected .role-name { color: var(--accent2); }
+ 
+  .employee-fields { display: none; }
+  .employee-fields.show { display: block; }
+</style>
+</head>
+<body>
+ 
+<div class="container">
+  <div class="logo">
+    <div class="logo-title">ULMS</div>
+    <div class="logo-sub">Система управления отпусками</div>
+  </div>
+ 
+  <div class="card">
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('login')">Вход</button>
+      <button class="tab" onclick="showTab('register')">Регистрация</button>
+    </div>
+ 
+    <div class="form-container">
+      <div id="alert" class="alert"></div>
+ 
+      <!-- LOGIN -->
+      <div class="form-section active" id="section-login">
+        <div class="form-group">
+          <label class="form-label">Логин</label>
+          <input class="form-input" id="login-username" placeholder="Введите логин">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Пароль</label>
+          <input class="form-input" id="login-password" type="password" placeholder="Введите пароль">
+        </div>
+        <button class="btn btn-primary" onclick="login()" id="login-btn">Войти</button>
+      </div>
+ 
+      <!-- REGISTER -->
+      <div class="form-section" id="section-register">
+        
+        <!-- Role selector -->
+        <div class="form-group">
+          <label class="form-label">Роль в системе</label>
+          <div class="role-selector">
+            <label class="role-option selected" onclick="selectRole('employee')">
+              <input type="radio" name="role" value="employee" checked>
+              <div class="role-icon">👤</div>
+              <div class="role-name">Сотрудник</div>
+            </label>
+            <label class="role-option" onclick="selectRole('admin')">
+              <input type="radio" name="role" value="admin">
+              <div class="role-icon">🛡️</div>
+              <div class="role-name">Администратор</div>
+            </label>
+          </div>
+        </div>
+ 
+        <div class="form-group">
+          <label class="form-label">Логин</label>
+          <input class="form-input" id="reg-username" placeholder="Придумайте логин">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-input" id="reg-email" type="email" placeholder="email@university.kz">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Пароль</label>
+          <input class="form-input" id="reg-password" type="password" placeholder="Минимум 6 символов">
+        </div>
+ 
+        <!-- Employee specific fields -->
+        <div class="employee-fields show" id="employee-fields">
+          <hr class="divider">
+          <div class="divider-label">Данные сотрудника</div>
+          
+          <div class="form-group">
+            <label class="form-label">ФИО</label>
+            <input class="form-input" id="reg-fullname" placeholder="Иванов Иван Иванович">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Должность</label>
+              <input class="form-input" id="reg-position" placeholder="Доцент">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Подразделение</label>
+              <select class="form-select" id="reg-department">
+                <option value="">Загрузка...</option>
+              </select>
+            </div>
+          </div>
+        </div>
+ 
+        <button class="btn btn-primary" onclick="register()" id="reg-btn">Зарегистрироваться</button>
+      </div>
+    </div>
+  </div>
+</div>
+ 
+<script>
+const API = 'http://127.0.0.1:8000/api';
+let selectedRole = 'employee';
+ 
+// Load departments for registration
+async function loadDepartments() {
+  try {
+    const r = await fetch(API + '/departments/');
+    const depts = await r.json();
+    const select = document.getElementById('reg-department');
+    select.innerHTML = '<option value="">— выберите —</option>' + 
+      depts.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+  } catch(e) {
+    document.getElementById('reg-department').innerHTML = '<option value="">Ошибка загрузки</option>';
+  }
+}
+ 
+loadDepartments();
+ 
+function selectRole(role) {
+  selectedRole = role;
+  document.querySelectorAll('.role-option').forEach(el => el.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+  
+  const empFields = document.getElementById('employee-fields');
+  if (role === 'employee') {
+    empFields.classList.add('show');
+  } else {
+    empFields.classList.remove('show');
+  }
+}
+ 
+function showTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  document.getElementById('section-' + tab).classList.add('active');
+  hideAlert();
+}
+ 
+function showAlert(msg, type) {
+  const el = document.getElementById('alert');
+  el.textContent = msg;
+  el.className = 'alert ' + type;
+}
+ 
+function hideAlert() {
+  document.getElementById('alert').className = 'alert';
+}
+ 
+async function login() {
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
+  const btn = document.getElementById('login-btn');
+ 
+  if (!username || !password) return showAlert('Заполните все поля', 'error');
+ 
+  btn.disabled = true;
+  btn.textContent = 'Входим...';
+ 
+  try {
+    const r = await fetch(API + '/auth/login/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await r.json();
+ 
+    if (!r.ok) return showAlert(data.error || 'Ошибка входа', 'error');
+ 
+    localStorage.setItem('access', data.access);
+    localStorage.setItem('refresh', data.refresh);
+    localStorage.setItem('user', JSON.stringify(data.user));
+ 
+    showAlert('Успешный вход! Переходим...', 'success');
+    setTimeout(() => { window.location.href = 'index.html'; }, 800);
+ 
+  } catch(e) {
+    showAlert('Сервер недоступен', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Войти';
+  }
+}
+ 
+async function register() {
+  const username = document.getElementById('reg-username').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const password = document.getElementById('reg-password').value;
+  const btn = document.getElementById('reg-btn');
+ 
+  if (!username || !email || !password) return showAlert('Заполните все поля', 'error');
+ 
+  // Employee-specific validation
+  let employeeData = null;
+  if (selectedRole === 'employee') {
+    const fullName = document.getElementById('reg-fullname').value.trim();
+    const position = document.getElementById('reg-position').value.trim();
+    const department = document.getElementById('reg-department').value;
+ 
+    if (!fullName || !position || !department) {
+      return showAlert('Заполните данные сотрудника', 'error');
+    }
+    employeeData = { full_name: fullName, position, department };
+  }
+ 
+  btn.disabled = true;
+  btn.textContent = 'Регистрируем...';
+ 
+  try {
+    const r = await fetch(API + '/auth/register/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, email, password, role: selectedRole, employee: employeeData })
+    });
+    const data = await r.json();
+ 
+    if (!r.ok) return showAlert(data.error || 'Ошибка регистрации', 'error');
+ 
+    localStorage.setItem('access', data.access);
+    localStorage.setItem('refresh', data.refresh);
+    localStorage.setItem('user', JSON.stringify(data.user));
+ 
+    showAlert('Регистрация успешна! Переходим...', 'success');
+    setTimeout(() => { window.location.href = 'index.html'; }, 800);
+ 
+  } catch(e) {
+    showAlert('Сервер недоступен', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Зарегистрироваться';
+  }
+}
+ 
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const activeSection = document.querySelector('.form-section.active').id;
+    if (activeSection === 'section-login') login();
+    else register();
+  }
+});
+ 
+if (localStorage.getItem('access')) {
+  window.location.href = 'index.html';
+}
+</script>
+</body>
+</html>
+ 

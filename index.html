@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ULMS — Система управления отпусками</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0e0e11; --bg2: #16161a; --bg3: #1e1e24; --bg4: #26262e;
+    --border: #2a2a35; --text: #e8e8f0; --text2: #9090a8; --text3: #5a5a72;
+    --accent: #7c6dfa; --accent2: #a594fb;
+    --green: #4ade80; --green-bg: rgba(74,222,128,0.08);
+    --yellow: #fbbf24; --yellow-bg: rgba(251,191,36,0.08);
+    --red: #f87171; --red-bg: rgba(248,113,113,0.08);
+    --blue: #60a5fa; --blue-bg: rgba(96,165,250,0.08);
+  }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; }
+  .sidebar { width: 220px; min-height: 100vh; background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; }
+  .sidebar-logo { padding: 1.5rem 1.25rem 1rem; border-bottom: 1px solid var(--border); }
+  .logo-text { font-size: 18px; font-weight: 600; color: var(--text); letter-spacing: -0.02em; }
+  .logo-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .user-info { padding: 0.75rem 1.25rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; cursor: pointer; transition: background 0.15s; }
+  .user-info:hover { background: var(--bg3); }
+  .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: rgba(124,109,250,0.2); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: var(--accent2); flex-shrink: 0; }
+  .user-name { font-size: 13px; font-weight: 500; color: var(--text); }
+  .user-role { font-size: 10px; font-weight: 500; padding: 2px 7px; border-radius: 100px; margin-top: 2px; display: inline-block; }
+  .role-admin { background: rgba(251,191,36,0.12); color: var(--yellow); }
+  .role-employee { background: rgba(74,222,128,0.1); color: var(--green); }
+  .sidebar-nav { padding: 0.75rem; flex: 1; }
+  .nav-label { font-size: 10px; font-weight: 500; color: var(--text3); letter-spacing: 0.08em; text-transform: uppercase; padding: 0.5rem 0.5rem 0.25rem; margin-top: 0.5rem; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 0.55rem 0.75rem; border-radius: 8px; font-size: 13.5px; color: var(--text2); cursor: pointer; transition: all 0.15s; margin-bottom: 2px; }
+  .nav-item:hover { background: var(--bg3); color: var(--text); }
+  .nav-item.active { background: rgba(124,109,250,0.12); color: var(--accent2); }
+  .nav-item .icon { font-size: 16px; width: 18px; text-align: center; }
+  .sidebar-footer { padding: 0.75rem 1.25rem; border-top: 1px solid var(--border); }
+  .btn-logout { width: 100%; padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid rgba(248,113,113,0.2); background: var(--red-bg); color: var(--red); font-family: 'Inter', sans-serif; transition: all 0.15s; display: flex; align-items: center; gap: 8px; }
+  .btn-logout:hover { background: rgba(248,113,113,0.15); }
+  .main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+  .topbar { padding: 1.25rem 2rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--bg); position: sticky; top: 0; z-index: 5; }
+  .page-title { font-size: 16px; font-weight: 500; }
+  .page-sub { font-size: 13px; color: var(--text3); margin-top: 1px; }
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
+  .btn { padding: 7px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; transition: all 0.15s; font-family: 'Inter', sans-serif; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent2); }
+  .btn-ghost { background: var(--bg3); color: var(--text2); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: var(--bg4); color: var(--text); }
+  .btn-danger { background: var(--red-bg); color: var(--red); border: 1px solid rgba(248,113,113,0.2); }
+  .btn-danger:hover { background: rgba(248,113,113,0.15); }
+  .btn-sm { padding: 4px 10px; font-size: 12px; }
+  .content { padding: 2rem; flex: 1; }
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 2rem; }
+  .stat-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem 1.5rem; }
+  .stat-label { font-size: 12px; color: var(--text3); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+  .stat-value { font-size: 28px; font-weight: 600; margin-top: 0.5rem; font-family: 'JetBrains Mono', monospace; }
+  .stat-change { font-size: 12px; color: var(--text3); margin-top: 4px; }
+  .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 1.5rem; }
+  .card-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .card-title { font-size: 14px; font-weight: 500; }
+  .card-count { font-size: 12px; color: var(--text3); background: var(--bg3); padding: 2px 8px; border-radius: 100px; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 11px; font-weight: 500; color: var(--text3); letter-spacing: 0.06em; text-transform: uppercase; padding: 0.75rem 1.5rem; border-bottom: 1px solid var(--border); background: var(--bg2); }
+  td { padding: 0.85rem 1.5rem; font-size: 13.5px; border-bottom: 1px solid rgba(42,42,53,0.6); color: var(--text); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.015); }
+  .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 100px; font-size: 11.5px; font-weight: 500; }
+  .badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; }
+  .badge-pending { background: var(--yellow-bg); color: var(--yellow); }
+  .badge-pending::before { background: var(--yellow); }
+  .badge-approved { background: var(--green-bg); color: var(--green); }
+  .badge-approved::before { background: var(--green); }
+  .badge-rejected { background: var(--red-bg); color: var(--red); }
+  .badge-rejected::before { background: var(--red); }
+  .mono { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: var(--text2); }
+  .actions { display: flex; gap: 6px; }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 100; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--bg2); border: 1px solid var(--border); border-radius: 16px; width: 480px; max-width: 95vw; max-height: 90vh; overflow-y: auto; }
+  .modal-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .modal-title { font-size: 15px; font-weight: 500; }
+  .modal-close { width: 28px; height: 28px; border-radius: 8px; border: none; background: var(--bg3); color: var(--text2); cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; }
+  .modal-close:hover { background: var(--bg4); color: var(--text); }
+  .modal-body { padding: 1.5rem; }
+  .modal-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; }
+  .form-group { margin-bottom: 1.1rem; }
+  .form-label { font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 6px; display: block; }
+  .form-input, .form-select { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font-size: 13.5px; color: var(--text); font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.15s; }
+  .form-input:focus, .form-select:focus { border-color: var(--accent); }
+  .form-select option { background: var(--bg3); }
+  textarea.form-input { resize: vertical; min-height: 80px; }
+  .empty-state { text-align: center; padding: 3rem 1rem; color: var(--text3); }
+  .empty-icon { font-size: 32px; margin-bottom: 0.75rem; }
+  .empty-text { font-size: 14px; }
+  .loading { text-align: center; padding: 2rem; color: var(--text3); font-size: 13px; }
+  .toast-container { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 200; display: flex; flex-direction: column; gap: 8px; }
+  .toast { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 0.75rem 1rem; font-size: 13px; display: flex; align-items: center; gap: 8px; animation: slideIn 0.2s ease; min-width: 220px; }
+  .toast.success { border-color: rgba(74,222,128,0.3); }
+  .toast.error { border-color: rgba(248,113,113,0.3); }
+  @keyframes slideIn { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  .page-section { display: none; }
+  .page-section.active { display: block; }
+</style>
+</head>
+<body>
+ 
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-text">ULMS</div>
+    <div class="logo-sub">Управление отпусками</div>
+  </div>
+ 
+  <div class="user-info" onclick="window.location.href='profile.html'" title="Перейти в профиль">
+    <div class="user-avatar" id="userAvatar">?</div>
+    <div>
+      <div class="user-name" id="userName">Загрузка...</div>
+      <span class="user-role" id="userRoleBadge">—</span>
+    </div>
+  </div>
+ 
+  <nav class="sidebar-nav">
+    <div class="nav-label">Обзор</div>
+    <div class="nav-item active" onclick="showPage('dashboard')">
+      <span class="icon">◈</span> Дашборд
+    </div>
+    <div class="nav-label">Управление</div>
+    <div class="nav-item" id="nav-employees" onclick="showPage('employees')">
+      <span class="icon">◉</span> Сотрудники
+    </div>
+    <div class="nav-item" id="nav-departments" onclick="showPage('departments')">
+      <span class="icon">◧</span> Подразделения
+    </div>
+    <div class="nav-item" id="nav-leave-types" onclick="showPage('leave-types')">
+      <span class="icon">◈</span> Типы отпусков
+    </div>
+    <div class="nav-item" onclick="showPage('leave-requests')">
+      <span class="icon">◑</span> Заявки
+    </div>
+    <div class="nav-label">Аккаунт</div>
+    <div class="nav-item" onclick="window.location.href='profile.html'">
+      <span class="icon">◎</span> Профиль
+    </div>
+  </nav>
+ 
+  <div class="sidebar-footer">
+    <button class="btn-logout" onclick="logout()">⎋ Выйти из системы</button>
+  </div>
+</aside>
+ 
+<main class="main">
+  <div class="topbar">
+    <div>
+      <div class="page-title" id="pageTitle">Дашборд</div>
+      <div class="page-sub" id="pageSub">Общая статистика системы</div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-ghost" onclick="refreshAll()">↻ Обновить</button>
+      <button class="btn btn-primary" id="addBtn" onclick="openAddModal()" style="display:none">+ Добавить</button>
+    </div>
+  </div>
+ 
+  <div class="content">
+    <div class="page-section active" id="page-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Сотрудников</div>
+          <div class="stat-value" id="stat-employees" style="color:var(--accent2)">—</div>
+          <div class="stat-change">в системе</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Подразделений</div>
+          <div class="stat-value" id="stat-departments" style="color:var(--blue)">—</div>
+          <div class="stat-change">кафедры и отделы</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Заявок всего</div>
+          <div class="stat-value" id="stat-requests" style="color:var(--yellow)">—</div>
+          <div class="stat-change">за всё время</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">На рассмотрении</div>
+          <div class="stat-value" id="stat-pending" style="color:var(--green)">—</div>
+          <div class="stat-change">ожидают решения</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Последние заявки</span></div>
+        <table>
+          <thead><tr><th>Сотрудник</th><th>Тип отпуска</th><th>Период</th><th>Дней</th><th>Статус</th></tr></thead>
+          <tbody id="dashboard-requests"><tr><td colspan="5" class="loading">Загрузка...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+ 
+    <div class="page-section" id="page-employees">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Все сотрудники</span>
+          <span class="card-count" id="emp-count">0</span>
+        </div>
+        <table>
+          <thead><tr><th>ФИО</th><th>Должность</th><th>Подразделение</th><th>Email</th><th>Действия</th></tr></thead>
+          <tbody id="employees-table"><tr><td colspan="5" class="loading">Загрузка...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+ 
+    <div class="page-section" id="page-departments">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Подразделения</span>
+          <span class="card-count" id="dept-count">0</span>
+        </div>
+        <table>
+          <thead><tr><th>#</th><th>Название</th><th>Действия</th></tr></thead>
+          <tbody id="departments-table"><tr><td colspan="3" class="loading">Загрузка...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+ 
+    <div class="page-section" id="page-leave-types">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Типы отпусков</span>
+          <span class="card-count" id="lt-count">0</span>
+        </div>
+        <table>
+          <thead><tr><th>#</th><th>Название</th><th>Действия</th></tr></thead>
+          <tbody id="leave-types-table"><tr><td colspan="3" class="loading">Загрузка...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+ 
+    <div class="page-section" id="page-leave-requests">
+      <div style="display:flex;gap:8px;margin-bottom:1rem;">
+        <button class="btn btn-ghost btn-sm" onclick="filterRequests('all')">Все</button>
+        <button class="btn btn-ghost btn-sm" onclick="filterRequests('pending')">На рассмотрении</button>
+        <button class="btn btn-ghost btn-sm" onclick="filterRequests('approved')">Одобрено</button>
+        <button class="btn btn-ghost btn-sm" onclick="filterRequests('rejected')">Отклонено</button>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Заявки на отпуск</span>
+          <span class="card-count" id="lr-count">0</span>
+        </div>
+        <table>
+          <thead><tr><th>Сотрудник</th><th>Тип</th><th>Начало</th><th>Конец</th><th>Дней</th><th>Статус</th><th>Действия</th></tr></thead>
+          <tbody id="leave-requests-table"><tr><td colspan="7" class="loading">Загрузка...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+ 
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-title">Добавить</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Отмена</button>
+      <button class="btn btn-primary" onclick="submitModal()">Сохранить</button>
+    </div>
+  </div>
+</div>
+ 
+<div class="toast-container" id="toasts"></div>
+ 
+<script>
+const API = 'http://127.0.0.1:8000/api';
+let currentPage = 'dashboard';
+let currentModal = null;
+let editingId = null;
+let allRequests = [];
+let departments = [];
+let leaveTypes = [];
+let currentUser = null;
+let isAdmin = false;
+ 
+function getToken() { return localStorage.getItem('access'); }
+ 
+function logout() {
+  localStorage.removeItem('access');
+  localStorage.removeItem('refresh');
+  localStorage.removeItem('user');
+  window.location.href = 'login.html';
+}
+ 
+function initUser() {
+  const token = getToken();
+  if (!token) { window.location.href = 'login.html'; return; }
+  try { currentUser = JSON.parse(localStorage.getItem('user')); } catch(e) { logout(); return; }
+  if (!currentUser) { logout(); return; }
+  isAdmin = currentUser.role === 'admin';
+  const name = currentUser.username || 'Пользователь';
+  document.getElementById('userName').textContent = name;
+  document.getElementById('userAvatar').textContent = name[0].toUpperCase();
+  const roleBadge = document.getElementById('userRoleBadge');
+  if (isAdmin) { roleBadge.textContent = 'Администратор'; roleBadge.className = 'user-role role-admin'; }
+  else { roleBadge.textContent = 'Сотрудник'; roleBadge.className = 'user-role role-employee'; }
+  if (!isAdmin) {
+    document.getElementById('nav-departments').style.display = 'none';
+    document.getElementById('nav-leave-types').style.display = 'none';
+  }
+}
+ 
+async function api(method, path, data) {
+  const token = getToken();
+  const opts = { method, headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) } };
+  if (data) opts.body = JSON.stringify(data);
+  const r = await fetch(API + path, opts);
+  if (r.status === 401) { logout(); return; }
+  if (!r.ok) { const err = await r.json().catch(() => ({})); throw err; }
+  if (r.status === 204) return null;
+  return r.json();
+}
+ 
+function showPage(page) {
+  currentPage = page;
+  document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  if (event && event.currentTarget) event.currentTarget.classList.add('active');
+  const titles = {
+    dashboard: ['Дашборд', 'Общая статистика системы'],
+    employees: ['Сотрудники', 'Управление сотрудниками'],
+    departments: ['Подразделения', 'Кафедры и отделы'],
+    'leave-types': ['Типы отпусков', 'Виды отпусков'],
+    'leave-requests': ['Заявки на отпуск', isAdmin ? 'Все заявки сотрудников' : 'Мои заявки на отпуск'],
+  };
+  document.getElementById('pageTitle').textContent = titles[page][0];
+  document.getElementById('pageSub').textContent = titles[page][1];
+  const addBtn = document.getElementById('addBtn');
+  if (page === 'dashboard') addBtn.style.display = 'none';
+  else if (!isAdmin && (page === 'departments' || page === 'leave-types' || page === 'employees')) addBtn.style.display = 'none';
+  else addBtn.style.display = '';
+  loadPage(page);
+}
+ 
+function loadPage(page) {
+  if (page === 'dashboard') loadDashboard();
+  else if (page === 'employees') loadEmployees();
+  else if (page === 'departments') loadDepartments();
+  else if (page === 'leave-types') loadLeaveTypes();
+  else if (page === 'leave-requests') loadLeaveRequests();
+}
+ 
+function refreshAll() { loadPage(currentPage); }
+ 
+async function loadDashboard() {
+  try {
+    const [emps, depts, reqs] = await Promise.all([api('GET', '/employees/'), api('GET', '/departments/'), api('GET', '/leave-requests/')]);
+    document.getElementById('stat-employees').textContent = emps.length;
+    document.getElementById('stat-departments').textContent = depts.length;
+    document.getElementById('stat-requests').textContent = reqs.length;
+    document.getElementById('stat-pending').textContent = reqs.filter(r => r.status === 'pending').length;
+    const tbody = document.getElementById('dashboard-requests');
+    const recent = reqs.slice(0, 8);
+    if (!recent.length) { tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">◌</div><div class="empty-text">Заявок пока нет</div></div></td></tr>'; return; }
+    tbody.innerHTML = recent.map(r => `<tr><td>${r.employee_name||'—'}</td><td>${r.leave_type_name||'—'}</td><td><span class="mono">${r.start_date}</span></td><td><span class="mono">${r.duration_days} д.</span></td><td>${statusBadge(r.status)}</td></tr>`).join('');
+  } catch(e) { console.error(e); }
+}
+ 
+async function loadEmployees() {
+  const tbody = document.getElementById('employees-table');
+  tbody.innerHTML = '<tr><td colspan="5" class="loading">Загрузка...</td></tr>';
+  try {
+    departments = await api('GET', '/departments/');
+    const emps = await api('GET', '/employees/');
+    document.getElementById('emp-count').textContent = emps.length;
+    if (!emps.length) { tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">◉</div><div class="empty-text">Сотрудников нет</div></div></td></tr>'; return; }
+    tbody.innerHTML = emps.map(e => `<tr><td><strong>${e.full_name}</strong></td><td>${e.position}</td><td>${e.department_name||'—'}</td><td><span class="mono">${e.email}</span></td><td>${isAdmin?`<div class="actions"><button class="btn btn-ghost btn-sm" onclick="editEmployee(${e.id})">✎</button><button class="btn btn-danger btn-sm" onclick="deleteItem('/employees/', ${e.id}, loadEmployees)">✕</button></div>`:'—'}</td></tr>`).join('');
+  } catch(e) { toast('Ошибка загрузки сотрудников', 'error'); }
+}
+ 
+async function loadDepartments() {
+  const tbody = document.getElementById('departments-table');
+  tbody.innerHTML = '<tr><td colspan="3" class="loading">Загрузка...</td></tr>';
+  try {
+    const depts = await api('GET', '/departments/');
+    document.getElementById('dept-count').textContent = depts.length;
+    if (!depts.length) { tbody.innerHTML = '<tr><td colspan="3"><div class="empty-state"><div class="empty-icon">◧</div><div class="empty-text">Подразделений нет</div></div></td></tr>'; return; }
+    tbody.innerHTML = depts.map((d,i) => `<tr><td><span class="mono">${String(i+1).padStart(2,'0')}</span></td><td><strong>${d.name}</strong></td><td>${isAdmin?`<div class="actions"><button class="btn btn-ghost btn-sm" onclick="editDepartment(${d.id}, '${d.name.replace(/'/g,"\\'")}')">✎</button><button class="btn btn-danger btn-sm" onclick="deleteItem('/departments/', ${d.id}, loadDepartments)">✕</button></div>`:'—'}</td></tr>`).join('');
+  } catch(e) { toast('Ошибка загрузки', 'error'); }
+}
+ 
+async function loadLeaveTypes() {
+  const tbody = document.getElementById('leave-types-table');
+  tbody.innerHTML = '<tr><td colspan="3" class="loading">Загрузка...</td></tr>';
+  try {
+    leaveTypes = await api('GET', '/leave-types/');
+    document.getElementById('lt-count').textContent = leaveTypes.length;
+    if (!leaveTypes.length) { tbody.innerHTML = '<tr><td colspan="3"><div class="empty-state"><div class="empty-icon">◈</div><div class="empty-text">Типов отпусков нет</div></div></td></tr>'; return; }
+    tbody.innerHTML = leaveTypes.map((lt,i) => `<tr><td><span class="mono">${String(i+1).padStart(2,'0')}</span></td><td><strong>${lt.name}</strong></td><td>${isAdmin?`<div class="actions"><button class="btn btn-ghost btn-sm" onclick="editLeaveType(${lt.id}, '${lt.name.replace(/'/g,"\\'")}')">✎</button><button class="btn btn-danger btn-sm" onclick="deleteItem('/leave-types/', ${lt.id}, loadLeaveTypes)">✕</button></div>`:'—'}</td></tr>`).join('');
+  } catch(e) { toast('Ошибка загрузки', 'error'); }
+}
+ 
+async function loadLeaveRequests() {
+  const tbody = document.getElementById('leave-requests-table');
+  tbody.innerHTML = '<tr><td colspan="7" class="loading">Загрузка...</td></tr>';
+  try {
+    let url = '/leave-requests/';
+    if (!isAdmin && currentUser.employee_id) url = `/leave-requests/?employee_id=${currentUser.employee_id}`;
+    [allRequests, departments, leaveTypes] = await Promise.all([api('GET', url), api('GET', '/departments/'), api('GET', '/leave-types/')]);
+    renderRequests(allRequests);
+  } catch(e) { toast('Ошибка загрузки заявок', 'error'); }
+}
+ 
+function renderRequests(reqs) {
+  const tbody = document.getElementById('leave-requests-table');
+  document.getElementById('lr-count').textContent = reqs.length;
+  if (!reqs.length) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">◑</div><div class="empty-text">Заявок нет</div></div></td></tr>'; return; }
+  tbody.innerHTML = reqs.map(r => `<tr><td><strong>${r.employee_name||'—'}</strong></td><td>${r.leave_type_name||'—'}</td><td><span class="mono">${r.start_date}</span></td><td><span class="mono">${r.end_date}</span></td><td><span class="mono">${r.duration_days} д.</span></td><td>${statusBadge(r.status)}</td><td>${isAdmin?`<div class="actions"><button class="btn btn-ghost btn-sm" onclick="changeStatus(${r.id},'approved')" title="Одобрить">✓</button><button class="btn btn-danger btn-sm" onclick="changeStatus(${r.id},'rejected')" title="Отклонить">✕</button></div>`:'—'}</td></tr>`).join('');
+}
+ 
+function filterRequests(status) {
+  if (status === 'all') renderRequests(allRequests);
+  else renderRequests(allRequests.filter(r => r.status === status));
+}
+ 
+async function changeStatus(id, status) {
+  try { await api('PATCH', `/leave-requests/${id}/`, { status }); toast(status==='approved'?'Заявка одобрена':'Заявка отклонена','success'); loadLeaveRequests(); }
+  catch(e) { toast('Ошибка', 'error'); }
+}
+ 
+function statusBadge(status) {
+  const map = { pending: ['badge-pending','На рассмотрении'], approved: ['badge-approved','Одобрено'], rejected: ['badge-rejected','Отклонено'] };
+  const [cls, label] = map[status] || ['', status];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+ 
+async function deleteItem(path, id, reload) {
+  if (!confirm('Удалить?')) return;
+  try { await api('DELETE', path + id + '/'); toast('Удалено','success'); reload(); }
+  catch(e) { toast('Ошибка удаления','error'); }
+}
+ 
+function toast(msg, type='success') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span>${type==='success'?'✓':'✕'}</span> ${msg}`;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+ 
+function openAddModal() {
+  editingId = null;
+  if (currentPage==='employees') openEmployeeModal();
+  else if (currentPage==='departments') openDeptModal();
+  else if (currentPage==='leave-types') openLeaveTypeModal();
+  else if (currentPage==='leave-requests') openLeaveRequestModal();
+}
+ 
+function openModal(title, html) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+ 
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); currentModal=null; editingId=null; }
+ 
+function openDeptModal(id, name) {
+  editingId=id||null; currentModal='department';
+  openModal(id?'Редактировать подразделение':'Новое подразделение', `<div class="form-group"><label class="form-label">Название подразделения</label><input class="form-input" id="f-name" placeholder="Кафедра информатики" value="${name||''}"></div>`);
+}
+function editDepartment(id, name) { openDeptModal(id, name); }
+ 
+function openLeaveTypeModal(id, name) {
+  editingId=id||null; currentModal='leave-type';
+  openModal(id?'Редактировать тип':'Новый тип отпуска', `<div class="form-group"><label class="form-label">Название типа отпуска</label><input class="form-input" id="f-name" placeholder="Ежегодный оплачиваемый" value="${name||''}"></div>`);
+}
+function editLeaveType(id, name) { openLeaveTypeModal(id, name); }
+ 
+async function openEmployeeModal(id) {
+  editingId=id||null; currentModal='employee';
+  const depts = departments.length ? departments : await api('GET', '/departments/');
+  const deptOptions = depts.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+  openModal(id?'Редактировать сотрудника':'Новый сотрудник', `
+    <div class="form-group"><label class="form-label">ФИО</label><input class="form-input" id="f-name" placeholder="Иванов Иван Иванович"></div>
+    <div class="form-group"><label class="form-label">Должность</label><input class="form-input" id="f-position" placeholder="Доцент"></div>
+    <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="f-email" type="email" placeholder="ivanov@university.kz"></div>
+    <div class="form-group"><label class="form-label">Подразделение</label><select class="form-select" id="f-dept"><option value="">— выберите —</option>${deptOptions}</select></div>`);
+}
+ 
+async function editEmployee(id) {
+  const emp = await api('GET', `/employees/${id}/`);
+  await openEmployeeModal(id);
+  document.getElementById('f-name').value = emp.full_name;
+  document.getElementById('f-position').value = emp.position;
+  document.getElementById('f-email').value = emp.email;
+  document.getElementById('f-dept').value = emp.department;
+}
+ 
+async function openLeaveRequestModal() {
+  currentModal='leave-request';
+  const [emps, lts] = await Promise.all([api('GET','/employees/'), api('GET','/leave-types/')]);
+  const empOpts = emps.map(e => `<option value="${e.id}" ${currentUser.employee_id==e.id?'selected':''}>${e.full_name}</option>`).join('');
+  const ltOpts = lts.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
+  const today = new Date().toISOString().split('T')[0];
+  openModal('Новая заявка на отпуск', `
+    <div class="form-group"><label class="form-label">Сотрудник</label><select class="form-select" id="f-emp" ${!isAdmin?'disabled':''}><option value="">— выберите —</option>${empOpts}</select></div>
+    <div class="form-group"><label class="form-label">Тип отпуска</label><select class="form-select" id="f-lt"><option value="">— выберите —</option>${ltOpts}</select></div>
+    <div class="form-group"><label class="form-label">Дата начала</label><input class="form-input" id="f-start" type="date" value="${today}"></div>
+    <div class="form-group"><label class="form-label">Дата окончания</label><input class="form-input" id="f-end" type="date"></div>
+    <div class="form-group"><label class="form-label">Причина</label><textarea class="form-input" id="f-reason" placeholder="Ежегодный отпуск..."></textarea></div>`);
+}
+ 
+async function submitModal() {
+  try {
+    if (currentModal==='department') {
+      const name = document.getElementById('f-name').value.trim();
+      if (!name) return toast('Введите название','error');
+      if (editingId) await api('PUT',`/departments/${editingId}/`,{name}); else await api('POST','/departments/',{name});
+      toast(editingId?'Обновлено':'Создано','success'); closeModal(); loadDepartments();
+    } else if (currentModal==='leave-type') {
+      const name = document.getElementById('f-name').value.trim();
+      if (!name) return toast('Введите название','error');
+      if (editingId) await api('PUT',`/leave-types/${editingId}/`,{name}); else await api('POST','/leave-types/',{name});
+      toast(editingId?'Обновлено':'Создано','success'); closeModal(); loadLeaveTypes();
+    } else if (currentModal==='employee') {
+      const data = { full_name: document.getElementById('f-name').value.trim(), position: document.getElementById('f-position').value.trim(), email: document.getElementById('f-email').value.trim(), department: document.getElementById('f-dept').value };
+      if (!data.full_name || !data.email) return toast('Заполните обязательные поля','error');
+      if (editingId) await api('PUT',`/employees/${editingId}/`,data); else await api('POST','/employees/',data);
+      toast(editingId?'Обновлено':'Сотрудник добавлен','success'); closeModal(); loadEmployees();
+    } else if (currentModal==='leave-request') {
+      const empId = isAdmin ? document.getElementById('f-emp').value : currentUser.employee_id;
+      const data = { employee: empId, leave_type: document.getElementById('f-lt').value, start_date: document.getElementById('f-start').value, end_date: document.getElementById('f-end').value, reason: document.getElementById('f-reason').value.trim() };
+      if (!data.employee || !data.leave_type || !data.start_date || !data.end_date) return toast('Заполните все обязательные поля','error');
+      await api('POST','/leave-requests/',data);
+      toast('Заявка создана','success'); closeModal(); loadLeaveRequests();
+    }
+  } catch(err) {
+    const msg = Object.values(err).flat().join(', ');
+    toast(msg || 'Ошибка сохранения','error');
+  }
+}
+ 
+document.getElementById('modal-overlay').addEventListener('click', function(e) { if (e.target===this) closeModal(); });
+ 
+initUser();
+loadDashboard();
+</script>
+</body>
+</html>

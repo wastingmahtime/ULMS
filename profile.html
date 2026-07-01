@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ULMS — Профиль</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0e0e11; --bg2: #16161a; --bg3: #1e1e24; --bg4: #26262e;
+    --border: #2a2a35; --text: #e8e8f0; --text2: #9090a8; --text3: #5a5a72;
+    --accent: #7c6dfa; --accent2: #a594fb;
+    --green: #4ade80; --green-bg: rgba(74,222,128,0.08);
+    --red: #f87171; --red-bg: rgba(248,113,113,0.08);
+    --yellow: #fbbf24;
+  }
+
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; }
+
+  .sidebar {
+    width: 220px; min-height: 100vh; background: var(--bg2);
+    border-right: 1px solid var(--border); display: flex;
+    flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0;
+  }
+  .sidebar-logo { padding: 1.5rem 1.25rem 1rem; border-bottom: 1px solid var(--border); }
+  .logo-text { font-size: 18px; font-weight: 600; letter-spacing: -0.02em; }
+  .logo-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+  .user-info {
+    padding: 0.75rem 1.25rem; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .user-info:hover { background: var(--bg3); }
+  .user-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: rgba(124,109,250,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600; color: var(--accent2); flex-shrink: 0;
+  }
+  .user-name { font-size: 13px; font-weight: 500; }
+  .user-role { font-size: 10px; font-weight: 500; padding: 2px 7px; border-radius: 100px; margin-top: 2px; display: inline-block; }
+  .role-admin { background: rgba(251,191,36,0.12); color: var(--yellow); }
+  .role-employee { background: rgba(74,222,128,0.1); color: var(--green); }
+
+  .sidebar-nav { padding: 0.75rem; flex: 1; }
+  .nav-label { font-size: 10px; font-weight: 500; color: var(--text3); letter-spacing: 0.08em; text-transform: uppercase; padding: 0.5rem 0.5rem 0.25rem; margin-top: 0.5rem; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 0.55rem 0.75rem; border-radius: 8px; font-size: 13.5px; color: var(--text2); cursor: pointer; transition: all 0.15s; margin-bottom: 2px; text-decoration: none; }
+  .nav-item:hover { background: var(--bg3); color: var(--text); }
+  .nav-item.active { background: rgba(124,109,250,0.12); color: var(--accent2); }
+  .nav-item .icon { font-size: 16px; width: 18px; text-align: center; }
+
+  .sidebar-footer { padding: 0.75rem 1.25rem; border-top: 1px solid var(--border); }
+  .btn-logout { width: 100%; padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid rgba(248,113,113,0.2); background: var(--red-bg); color: var(--red); font-family: 'Inter', sans-serif; transition: all 0.15s; display: flex; align-items: center; gap: 8px; }
+  .btn-logout:hover { background: rgba(248,113,113,0.15); }
+
+  .main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; }
+  .topbar { padding: 1.25rem 2rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--bg); position: sticky; top: 0; z-index: 5; }
+  .page-title { font-size: 16px; font-weight: 500; }
+  .page-sub { font-size: 13px; color: var(--text3); margin-top: 1px; }
+
+  .content { padding: 2rem; flex: 1; max-width: 700px; }
+
+  .profile-header {
+    display: flex; align-items: center; gap: 1.5rem;
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 16px; padding: 1.5rem 2rem; margin-bottom: 1.5rem;
+  }
+  .profile-avatar {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: rgba(124,109,250,0.15);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; font-weight: 600; color: var(--accent2);
+    border: 2px solid rgba(124,109,250,0.3);
+    flex-shrink: 0;
+  }
+  .profile-name { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+  .profile-email { font-size: 13px; color: var(--text2); margin-bottom: 8px; }
+
+  .card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 1.5rem; }
+  .card-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); }
+  .card-title { font-size: 14px; font-weight: 500; }
+  .card-body { padding: 1.5rem; }
+
+  .form-group { margin-bottom: 1.1rem; }
+  .form-label { font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 6px; display: block; }
+  .form-input {
+    width: 100%; background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 12px; font-size: 14px; color: var(--text);
+    font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.15s;
+  }
+  .form-input:focus { border-color: var(--accent); }
+  .form-input:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .btn { padding: 9px 20px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; transition: all 0.15s; font-family: 'Inter', sans-serif; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent2); }
+  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+  .btn-ghost { background: var(--bg3); color: var(--text2); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: var(--bg4); color: var(--text); }
+
+  .alert { padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 1rem; display: none; }
+  .alert.error { background: var(--red-bg); color: var(--red); border: 1px solid rgba(248,113,113,0.2); display: block; }
+  .alert.success { background: var(--green-bg); color: var(--green); border: 1px solid rgba(74,222,128,0.2); display: block; }
+
+  .divider { display: flex; align-items: center; gap: 1rem; margin: 1.5rem 0; }
+  .divider hr { flex: 1; border: none; border-top: 1px solid var(--border); }
+  .divider span { font-size: 12px; color: var(--text3); }
+
+  .toast-container { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 200; display: flex; flex-direction: column; gap: 8px; }
+  .toast { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 0.75rem 1rem; font-size: 13px; display: flex; align-items: center; gap: 8px; animation: slideIn 0.2s ease; min-width: 220px; }
+  .toast.success { border-color: rgba(74,222,128,0.3); }
+  .toast.error { border-color: rgba(248,113,113,0.3); }
+  @keyframes slideIn { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-text">ULMS</div>
+    <div class="logo-sub">Управление отпусками</div>
+  </div>
+
+  <div class="user-info" onclick="window.location.href='profile.html'">
+    <div class="user-avatar" id="userAvatar">?</div>
+    <div>
+      <div class="user-name" id="userName">Загрузка...</div>
+      <span class="user-role" id="userRoleBadge">—</span>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-label">Обзор</div>
+    <a class="nav-item" href="index.html"><span class="icon">◈</span> Дашборд</a>
+    <div class="nav-label">Управление</div>
+    <a class="nav-item" href="index.html"><span class="icon">◉</span> Сотрудники</a>
+    <a class="nav-item" href="index.html"><span class="icon">◧</span> Подразделения</a>
+    <a class="nav-item" href="index.html"><span class="icon">◈</span> Типы отпусков</a>
+    <a class="nav-item" href="index.html"><span class="icon">◑</span> Заявки</a>
+    <div class="nav-label">Аккаунт</div>
+    <a class="nav-item active" href="profile.html"><span class="icon">◎</span> Профиль</a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <button class="btn-logout" onclick="logout()">⎋ Выйти из системы</button>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div>
+      <div class="page-title">Профиль</div>
+      <div class="page-sub">Настройки аккаунта</div>
+    </div>
+    <button class="btn btn-ghost" onclick="window.location.href='index.html'">← Назад</button>
+  </div>
+
+  <div class="content">
+
+    <!-- Profile header -->
+    <div class="profile-header">
+      <div class="profile-avatar" id="profileAvatar">?</div>
+      <div>
+        <div class="profile-name" id="profileName">—</div>
+        <div class="profile-email" id="profileEmail">—</div>
+        <span class="user-role" id="profileRole">—</span>
+      </div>
+    </div>
+
+    <!-- Account info -->
+    <div class="card">
+      <div class="card-header"><div class="card-title">Данные аккаунта</div></div>
+      <div class="card-body">
+        <div id="alert-account" class="alert"></div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Логин</label>
+            <input class="form-input" id="acc-username" placeholder="Логин">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input class="form-input" id="acc-email" type="email" placeholder="Email">
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="saveAccount()">Сохранить</button>
+      </div>
+    </div>
+
+    <!-- Change password -->
+    <div class="card">
+      <div class="card-header"><div class="card-title">Изменить пароль</div></div>
+      <div class="card-body">
+        <div id="alert-password" class="alert"></div>
+        <div class="form-group">
+          <label class="form-label">Текущий пароль</label>
+          <input class="form-input" id="pass-current" type="password" placeholder="Введите текущий пароль">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Новый пароль</label>
+            <input class="form-input" id="pass-new" type="password" placeholder="Минимум 6 символов">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Повторите пароль</label>
+            <input class="form-input" id="pass-confirm" type="password" placeholder="Повторите пароль">
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="changePassword()">Изменить пароль</button>
+      </div>
+    </div>
+
+    <!-- Employee info (only for employees) -->
+    <div class="card" id="employee-card" style="display:none">
+      <div class="card-header"><div class="card-title">Данные сотрудника</div></div>
+      <div class="card-body">
+        <div id="alert-employee" class="alert"></div>
+        <div class="form-group">
+          <label class="form-label">ФИО</label>
+          <input class="form-input" id="emp-fullname" placeholder="Иванов Иван Иванович">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Должность</label>
+          <input class="form-input" id="emp-position" placeholder="Доцент">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Подразделение</label>
+          <input class="form-input" id="emp-department" disabled>
+        </div>
+        <button class="btn btn-primary" onclick="saveEmployee()">Сохранить</button>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<div class="toast-container" id="toasts"></div>
+
+<script>
+const API = 'http://127.0.0.1:8000/api';
+let currentUser = null;
+
+function getToken() { return localStorage.getItem('access'); }
+
+function logout() {
+  localStorage.clear();
+  window.location.href = 'login.html';
+}
+
+async function apiCall(method, path, data) {
+  const token = getToken();
+  const opts = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+    }
+  };
+  if (data) opts.body = JSON.stringify(data);
+  const r = await fetch(API + path, opts);
+  if (r.status === 401) { logout(); return; }
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw err;
+  }
+  if (r.status === 204) return null;
+  return r.json();
+}
+
+function toast(msg, type = 'success') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span>${type === 'success' ? '✓' : '✕'}</span> ${msg}`;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+function showAlert(id, msg, type) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.className = 'alert ' + type;
+}
+
+function hideAlert(id) {
+  document.getElementById(id).className = 'alert';
+}
+
+async function init() {
+  const token = getToken();
+  if (!token) { window.location.href = 'login.html'; return; }
+
+  try {
+    currentUser = JSON.parse(localStorage.getItem('user'));
+  } catch(e) { logout(); return; }
+
+  if (!currentUser) { logout(); return; }
+
+  const isAdmin = currentUser.role === 'admin';
+  const name = currentUser.username || '?';
+
+  // Sidebar
+  document.getElementById('userAvatar').textContent = name[0].toUpperCase();
+  document.getElementById('userName').textContent = name;
+  const roleBadge = document.getElementById('userRoleBadge');
+  roleBadge.textContent = isAdmin ? 'Администратор' : 'Сотрудник';
+  roleBadge.className = 'user-role ' + (isAdmin ? 'role-admin' : 'role-employee');
+
+  // Profile header
+  document.getElementById('profileAvatar').textContent = name[0].toUpperCase();
+  document.getElementById('profileName').textContent = name;
+  document.getElementById('profileEmail').textContent = currentUser.email || '—';
+  const profileRole = document.getElementById('profileRole');
+  profileRole.textContent = isAdmin ? 'Администратор' : 'Сотрудник';
+  profileRole.className = 'user-role ' + (isAdmin ? 'role-admin' : 'role-employee');
+
+  // Account fields
+  document.getElementById('acc-username').value = currentUser.username || '';
+  document.getElementById('acc-email').value = currentUser.email || '';
+
+  // Employee card
+  if (!isAdmin && currentUser.employee_id) {
+    document.getElementById('employee-card').style.display = '';
+    try {
+      const emp = await apiCall('GET', `/employees/${currentUser.employee_id}/`);
+      document.getElementById('emp-fullname').value = emp.full_name || '';
+      document.getElementById('emp-position').value = emp.position || '';
+      document.getElementById('emp-department').value = emp.department_name || '—';
+    } catch(e) {}
+  }
+}
+
+async function saveAccount() {
+  const username = document.getElementById('acc-username').value.trim();
+  const email = document.getElementById('acc-email').value.trim();
+
+  if (!username || !email) return showAlert('alert-account', 'Заполните все поля', 'error');
+
+  try {
+    const r = await fetch(API + '/auth/update-profile/', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getToken()}`
+      },
+      body: JSON.stringify({ username, email })
+    });
+    const data = await r.json();
+    if (!r.ok) return showAlert('alert-account', data.error || 'Ошибка', 'error');
+
+    // Update localStorage
+    currentUser.username = username;
+    currentUser.email = email;
+    localStorage.setItem('user', JSON.stringify(currentUser));
+
+    document.getElementById('userName').textContent = username;
+    document.getElementById('userAvatar').textContent = username[0].toUpperCase();
+    document.getElementById('profileName').textContent = username;
+    document.getElementById('profileEmail').textContent = email;
+    document.getElementById('profileAvatar').textContent = username[0].toUpperCase();
+
+    showAlert('alert-account', 'Данные сохранены!', 'success');
+    setTimeout(() => hideAlert('alert-account'), 3000);
+  } catch(e) {
+    showAlert('alert-account', 'Ошибка сохранения', 'error');
+  }
+}
+
+async function changePassword() {
+  const current = document.getElementById('pass-current').value;
+  const newPass = document.getElementById('pass-new').value;
+  const confirm = document.getElementById('pass-confirm').value;
+
+  if (!current || !newPass || !confirm) return showAlert('alert-password', 'Заполните все поля', 'error');
+  if (newPass.length < 6) return showAlert('alert-password', 'Пароль минимум 6 символов', 'error');
+  if (newPass !== confirm) return showAlert('alert-password', 'Пароли не совпадают', 'error');
+
+  try {
+    const r = await fetch(API + '/auth/change-password/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getToken()}`
+      },
+      body: JSON.stringify({ current_password: current, new_password: newPass })
+    });
+    const data = await r.json();
+    if (!r.ok) return showAlert('alert-password', data.error || 'Ошибка', 'error');
+
+    document.getElementById('pass-current').value = '';
+    document.getElementById('pass-new').value = '';
+    document.getElementById('pass-confirm').value = '';
+    showAlert('alert-password', 'Пароль изменён!', 'success');
+    setTimeout(() => hideAlert('alert-password'), 3000);
+  } catch(e) {
+    showAlert('alert-password', 'Ошибка изменения пароля', 'error');
+  }
+}
+
+async function saveEmployee() {
+  const fullName = document.getElementById('emp-fullname').value.trim();
+  const position = document.getElementById('emp-position').value.trim();
+
+  if (!fullName || !position) return showAlert('alert-employee', 'Заполните все поля', 'error');
+
+  try {
+    const emp = await apiCall('GET', `/employees/${currentUser.employee_id}/`);
+    await apiCall('PUT', `/employees/${currentUser.employee_id}/`, {
+      full_name: fullName,
+      position: position,
+      email: emp.email,
+      department: emp.department
+    });
+    showAlert('alert-employee', 'Данные сотрудника сохранены!', 'success');
+    setTimeout(() => hideAlert('alert-employee'), 3000);
+  } catch(e) {
+    showAlert('alert-employee', 'Ошибка сохранения', 'error');
+  }
+}
+
+init();
+</script>
+</body>
+</html>
