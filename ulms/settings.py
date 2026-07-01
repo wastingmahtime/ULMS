@@ -66,8 +66,7 @@ if DATABASE_URL:
         'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)
     }
 else:
-    import pymysql
-    pymysql.install_as_MySQLdb()
+    
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
